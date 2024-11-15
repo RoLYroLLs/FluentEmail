@@ -1,130 +1,110 @@
-﻿using System.IO;
-using System.Net.Mail;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Net.Mail;
 using FluentEmail.Core;
-using NUnit.Framework;
 using Attachment = FluentEmail.Core.Models.Attachment;
 
-namespace FluentEmail.Smtp.Tests
-{
-    [NonParallelizable]
-    public class SmtpSenderTests
-    {
-        // Warning: To pass, an smtp listener must be running on localhost:25.
+namespace FluentEmail.Smtp.Tests;
 
-        const string toEmail = "bob@test.com";
-        const string fromEmail = "johno@test.com";
-        const string subject = "sup dawg";
-        const string body = "what be the hipitity hap?";
+[NonParallelizable]
+public class SmtpSenderTests {
+	// Warning: To pass, an smtp listener must be running on localhost:25.
 
-        private static IFluentEmail TestEmail => Email
-                .From(fromEmail)
-                .To(toEmail)
-                .Subject(subject)
-                .Body(body);
+	public const string ToEmail = "bob@test.com";
+	public const string FromEmail = "johno@test.com";
+	public const string Subject = "sup dawg";
+	public const string Body = "what be the hipitity hap?";
 
-        private readonly string tempDirectory;
+	private static IFluentEmail TestEmail => Email
+			.From(FromEmail)
+			.To(ToEmail)
+			.Subject(Subject)
+			.Body(Body);
 
-        public SmtpSenderTests()
-        {
-            tempDirectory = Path.Combine(Path.GetTempPath(), "EmailTest");
-        }
+	private readonly string _tempDirectory = Path.Combine(Path.GetTempPath(), "EmailTest");
 
-        [SetUp]
-        public void SetUp()
-        {
-            var sender = new SmtpSender(() => new SmtpClient("localhost")
-            {
-                EnableSsl = false,
-                DeliveryMethod = SmtpDeliveryMethod.SpecifiedPickupDirectory,
-                PickupDirectoryLocation = tempDirectory
-            });
+	[SetUp]
+	public void SetUp() {
+		SmtpSender sender = new(() => new SmtpClient("localhost") {
+			EnableSsl = false,
+			DeliveryMethod = SmtpDeliveryMethod.SpecifiedPickupDirectory,
+			PickupDirectoryLocation = _tempDirectory
+		});
 
-            Email.DefaultSender = sender;
-            Directory.CreateDirectory(tempDirectory);
-        }
+		Email.DefaultSender = sender;
+		Directory.CreateDirectory(_tempDirectory);
+	}
 
-        [TearDown]
-        public void TearDown()
-        {
-            Directory.Delete(tempDirectory, true);
-        }
+	[TearDown]
+	public void TearDown() => Directory.Delete(_tempDirectory, true);
 
-        [Test]
-        public void CanSendEmail()
-        {
-            var email = TestEmail
-                .Body("<h2>Test</h2>", true);
+	[Test]
+	public void CanSendEmail() {
+		IFluentEmail email = TestEmail
+			.Body("<h2>Test</h2>", true);
 
-            var response = email.Send();
+		Core.Models.SendResponse response = email.Send();
 
-            var files = Directory.EnumerateFiles(tempDirectory, "*.eml");
-            Assert.IsTrue(response.Successful);
-            Assert.IsNotEmpty(files);
-        }
+		IEnumerable<string> files = Directory.EnumerateFiles(_tempDirectory, "*.eml");
 
-        [Test]
-        public async Task CanSendEmailWithAttachments()
-        {
-            var stream = new MemoryStream();
-            var sw = new StreamWriter(stream);
-            sw.WriteLine("Hey this is some text in an attachment");
-            sw.Flush();
-            stream.Seek(0, SeekOrigin.Begin);
+		Assert.That(response.Successful, Is.True);
+		Assert.That(files, Is.Not.Empty);
+	}
 
-            var attachment = new Attachment
-            {
-                Data = stream,
-                ContentType = "text/plain",
-                Filename = "mailgunTest.txt"
-            };
+	[Test]
+	public async Task CanSendEmailWithAttachments() {
+		MemoryStream stream = new();
+		StreamWriter sw = new(stream);
+		await sw.WriteLineAsync("Hey this is some text in an attachment");
+		await sw.FlushAsync();
+		stream.Seek(0, SeekOrigin.Begin);
 
-            var email = TestEmail
-                .Attach(attachment);
+		Attachment attachment = new() {
+			Data = stream,
+			ContentType = "text/plain",
+			Filename = "mailgunTest.txt"
+		};
 
-            var response = await email.SendAsync();
+		IFluentEmail email = TestEmail
+			.Attach(attachment);
 
-            Assert.IsTrue(response.Successful);
-            var files = Directory.EnumerateFiles(tempDirectory, "*.eml");
-            Assert.IsNotEmpty(files);
-        }
+		Core.Models.SendResponse response = await email.SendAsync();
 
-        [Test]
-        public async Task CanSendAsyncHtmlAndPlaintextTogether()
-        {
-            var email = TestEmail
-                .Body("<h2>Test</h2><p>some body text</p>", true)
-                .PlaintextAlternativeBody("Test - Some body text");
+		IEnumerable<string> files = Directory.EnumerateFiles(_tempDirectory, "*.eml");
 
-            var response = await email.SendAsync();
+		Assert.That(response.Successful, Is.True);
+		Assert.That(files, Is.Not.Empty);
+	}
 
-            Assert.IsTrue(response.Successful);
-        }
+	[Test]
+	public async Task CanSendAsyncHtmlAndPlaintextTogether() {
+		IFluentEmail email = TestEmail
+			.Body("<h2>Test</h2><p>some body text</p>", true)
+			.PlaintextAlternativeBody("Test - Some body text");
 
-        [Test]
-        public void CanSendHtmlAndPlaintextTogether()
-        {
-            var email = TestEmail
-                .Body("<h2>Test</h2><p>some body text</p>", true)
-                .PlaintextAlternativeBody("Test - Some body text");
+		Core.Models.SendResponse response = await email.SendAsync();
 
-            var response = email.Send();
+		Assert.That(response.Successful, Is.True);
+	}
 
-            Assert.IsTrue(response.Successful);
-        }
+	[Test]
+	public void CanSendHtmlAndPlaintextTogether() {
+		IFluentEmail email = TestEmail
+			.Body("<h2>Test</h2><p>some body text</p>", true)
+			.PlaintextAlternativeBody("Test - Some body text");
 
-        [Test]
-        public void CancelSendIfCancelationRequested()
-        {
-            var email = TestEmail;
+		Core.Models.SendResponse response = email.Send();
 
-            var tokenSource = new CancellationTokenSource();
-            tokenSource.Cancel();
+		Assert.That(response.Successful, Is.True);
+	}
 
-            var response = email.Send(tokenSource.Token);
+	[Test]
+	public void CancelSendIfCancellationRequested() {
+		IFluentEmail email = TestEmail;
 
-            Assert.IsFalse(response.Successful);
-        }
-    }
+		CancellationTokenSource tokenSource = new();
+		tokenSource.Cancel();
+
+		Core.Models.SendResponse response = email.Send(tokenSource.Token);
+
+		Assert.That(response.Successful, Is.False);
+	}
 }

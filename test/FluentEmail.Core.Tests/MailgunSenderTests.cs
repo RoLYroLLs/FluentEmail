@@ -1,143 +1,125 @@
-﻿using System.IO;
-using System.Threading.Tasks;
-using FluentEmail.Core;
+﻿using FluentEmail.Core;
 using FluentEmail.Core.Models;
-using NUnit.Framework;
 using Newtonsoft.Json;
 
-namespace FluentEmail.Mailgun.Tests
-{
-    public class MailgunSenderTests
-    {
-        const string toEmail = "bentest1@mailinator.com";
-        const string fromEmail = "ben@test.com";
-        const string subject = "Attachment Tests";
-        const string body = "This email is testing the attachment functionality of MailGun.";
+namespace FluentEmail.Mailgun.Tests;
 
-        [SetUp]
-        public void SetUp()
-        {
-            var sender = new MailgunSender("sandboxcf5f41bbf2f84f15a386c60e253b5fe9.mailgun.org", "key-8d32c046d7f14ada8d5ba8253e3e30de");
-            Email.DefaultSender = sender;
-        }
+public class MailgunSenderTests {
+	private const string ToEmail = "bentest1@mailinator.com";
+	public const string FromEmail = "ben@test.com";
+	public const string Subject = "Attachment Tests";
+	public const string Body = "This email is testing the attachment functionality of MailGun.";
 
-        [Test]
-        public async Task CanSendEmail()
-        {
-            var email = Email
-                .From(fromEmail)
-                .To(toEmail)
-                .Subject(subject)
-                .Body(body);
+	[SetUp]
+	public void SetUp() {
+		MailgunSender sender = new("sandboxcf5f41bbf2f84f15a386c60e253b5fe9.mailgun.org", "key-8d32c046d7f14ada8d5ba8253e3e30de");
+		Email.DefaultSender = sender;
+	}
 
-            var response = await email.SendAsync();
+	[Test]
+	public async Task CanSendEmail() {
+		IFluentEmail email = Email
+			.From(FromEmail)
+			.To(ToEmail)
+			.Subject(Subject)
+			.Body(Body);
 
-            Assert.IsTrue(response.Successful);
-        }
+		SendResponse response = await email.SendAsync();
 
-        [Test]
-        public async Task GetMessageIdInResponse()
-        {
-            var email = Email
-                .From(fromEmail)
-                .To(toEmail)
-                .Subject(subject)
-                .Body(body);
+		Assert.That(response.Successful, Is.True);
+	}
 
-            var response = await email.SendAsync();
+	[Test]
+	public async Task GetMessageIdInResponse() {
+		IFluentEmail email = Email
+			.From(FromEmail)
+			.To(ToEmail)
+			.Subject(Subject)
+			.Body(Body);
 
-            Assert.IsTrue(response.Successful);
-            Assert.IsNotEmpty(response.MessageId);
-        }
+		SendResponse response = await email.SendAsync();
 
-        [Test]
-        public async Task CanSendEmailWithTag()
-        {
-            var email = Email
-                .From(fromEmail)
-                .To(toEmail)
-                .Subject(subject)
-                .Body(body)
-                .Tag("test");
+		Assert.That(response.Successful, Is.True);
+		Assert.That(response.MessageId, Is.Not.Empty);
+	}
 
-            var response = await email.SendAsync();
+	[Test]
+	public async Task CanSendEmailWithTag() {
+		IFluentEmail email = Email
+			.From(FromEmail)
+			.To(ToEmail)
+			.Subject(Subject)
+			.Body(Body)
+			.Tag("test");
 
-            Assert.IsTrue(response.Successful);
-        }
+		SendResponse response = await email.SendAsync();
 
-        [Test]
-        public async Task CanSendEmailWithVariables()
-        {
-            var email = Email
-                .From(fromEmail)
-                .To(toEmail)
-                .Subject(subject)
-                .Body(body)
-                .Header("X-Mailgun-Variables", JsonConvert.SerializeObject(new Variable { Var1 = "Test"}));
+		Assert.That(response.Successful, Is.True);
+	}
 
-            var response = await email.SendAsync();
+	[Test]
+	public async Task CanSendEmailWithVariables() {
+		IFluentEmail email = Email
+			.From(FromEmail)
+			.To(ToEmail)
+			.Subject(Subject)
+			.Body(Body)
+			.Header("X-Mailgun-Variables", JsonConvert.SerializeObject(new Variable { Var1 = "Test" }));
 
-            Assert.IsTrue(response.Successful);
-        }
+		SendResponse response = await email.SendAsync();
 
-        [Test]
-        public async Task CanSendEmailWithAttachments()
-        {
-            var stream = new MemoryStream();
-            var sw = new StreamWriter(stream);
-            sw.WriteLine("Hey this is some text in an attachment");
-            sw.Flush();
-            stream.Seek(0, SeekOrigin.Begin);
+		Assert.That(response.Successful, Is.True);
+	}
 
-            var attachment = new Attachment
-            {
-                Data = stream,
-                ContentType = "text/plain",
-                Filename = "mailgunTest.txt"
-            };
+	[Test]
+	public async Task CanSendEmailWithAttachments() {
+		MemoryStream stream = new();
+		StreamWriter sw = new(stream);
+		sw.WriteLine("Hey this is some text in an attachment");
+		sw.Flush();
+		stream.Seek(0, SeekOrigin.Begin);
 
-            var email = Email
-                .From(fromEmail)
-                .To(toEmail)
-                .Subject(subject)
-                .Body(body)
-                .Attach(attachment);
+		Attachment attachment = new() {
+			Data = stream,
+			ContentType = "text/plain",
+			Filename = "mailgunTest.txt"
+		};
 
-            var response = await email.SendAsync();
+		IFluentEmail email = Email
+			.From(FromEmail)
+			.To(ToEmail)
+			.Subject(Subject)
+			.Body(Body)
+			.Attach(attachment);
 
-            Assert.IsTrue(response.Successful);
-        }
+		SendResponse response = await email.SendAsync();
 
-        [Test]
-        public async Task CanSendEmailWithInlineImages()
-        {
-            using (var stream = File.OpenRead($"{Path.Combine(Directory.GetCurrentDirectory(), "logotest.png")}"))
-            {
-                var attachment = new Attachment
-                {
-                    IsInline = true,
-                    Data = stream,
-                    ContentType = "image/png",
-                    Filename = "logotest.png"
-                };
+		Assert.That(response.Successful, Is.True);
+	}
 
-                var email = Email
-                    .From(fromEmail)
-                    .To(toEmail)
-                    .Subject(subject)
-                    .Body("<html>Inline image here: <img src=\"cid:logotest.png\">" +
-                          "<p>You should see an image without an attachment, or without a download prompt, depending on the email client.</p></html>", true)
-                    .Attach(attachment);
+	[Test]
+	public async Task CanSendEmailWithInlineImages() {
+		await using FileStream stream = File.OpenRead($"{Path.Combine(Directory.GetCurrentDirectory(), "logotest.png")}");
+		Attachment attachment = new() {
+			IsInline = true,
+			Data = stream,
+			ContentType = "image/png",
+			Filename = "logotest.png"
+		};
 
-                var response = await email.SendAsync();
+		IFluentEmail email = Email
+			.From(FromEmail)
+			.To(ToEmail)
+			.Subject(Subject)
+			.Body("<html>Inline image here: <img src=\"cid:logotest.png\"><p>You should see an image without an attachment, or without a download prompt, depending on the email client.</p></html>", true)
+			.Attach(attachment);
 
-                Assert.IsTrue(response.Successful);
-            }
-        }
+		SendResponse response = await email.SendAsync();
 
-        class Variable
-        {
-            public string Var1 { get; set; }
-        }
-    }
+		Assert.That(response.Successful, Is.True);
+	}
+
+	class Variable {
+		public string? Var1 { get; set; }
+	}
 }

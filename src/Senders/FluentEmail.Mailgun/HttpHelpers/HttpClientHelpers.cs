@@ -5,207 +5,156 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using FluentEmail.Core;
+using Newtonsoft.Json;
 
-namespace FluentEmail.Mailgun.HttpHelpers
-{
-    public class HttpClientHelpers
-    {
-        public static HttpContent GetPostBody(IEnumerable<KeyValuePair<string, string>> parameters)
-        {
-            var formatted = parameters.Select(x => x.Key + "=" + x.Value);
-            return new StringContent(string.Join("&", formatted), Encoding.UTF8, "application/x-www-form-urlencoded");
-        }
+namespace FluentEmail.Mailgun.HttpHelpers;
 
-        public static HttpContent GetJsonBody(object value)
-        {
-            return new StringContent(JsonConvert.SerializeObject(value), Encoding.UTF8, "application/json");
-        }
+public class HttpClientHelpers {
+	public static HttpContent GetPostBody(IEnumerable<KeyValuePair<string, string>> parameters) {
+		IEnumerable<string> formatted = parameters.Select(x => x.Key + "=" + x.Value);
+		return new StringContent(string.Join("&", formatted), Encoding.UTF8, "application/x-www-form-urlencoded");
+	}
 
-        public static HttpContent GetMultipartFormDataContentBody(IEnumerable<KeyValuePair<string, string>> parameters, IEnumerable<HttpFile> files)
-        {
-            var mpContent = new MultipartFormDataContent();
+	public static HttpContent GetJsonBody(object value) => new StringContent(JsonConvert.SerializeObject(value), Encoding.UTF8, "application/json");
 
-            parameters.ForEach(p =>
-            {
-                mpContent.Add(new StringContent(p.Value), p.Key);
-            });
+	public static HttpContent GetMultipartFormDataContentBody(IEnumerable<KeyValuePair<string, string>> parameters, IEnumerable<HttpFile> files) {
+		MultipartFormDataContent mpContent = new();
 
-            files.ForEach(file =>
-            {
-                using (var memoryStream = new MemoryStream())
-                {
-                    file.Data.CopyTo(memoryStream);
-                    mpContent.Add(new ByteArrayContent(memoryStream.ToArray()), file.ParameterName, file.Filename);
-                }
-            });
+		parameters.ForEach(p => {
+			mpContent.Add(new StringContent(p.Value), p.Key);
+		});
 
-            return mpContent;
-        }
-    }
+		files.ForEach(file => {
+			using MemoryStream memoryStream = new();
+			file.Data?.CopyTo(memoryStream);
+			mpContent.Add(new ByteArrayContent(memoryStream.ToArray()), file.ParameterName, file.Filename);
+		});
 
-    public static class HttpClientExtensions
-    {
-        public static async Task<ApiResponse<T>> Get<T>(this HttpClient client, string url)
-        {
-            var response = await client.GetAsync(url);
-            var qr = await QuickResponse<T>.FromMessage(response);
-            return qr.ToApiResponse();
-        }
+		return mpContent;
+	}
+}
 
-        public static async Task<ApiResponse> GetFile(this HttpClient client, string url)
-        {
-            var response = await client.GetAsync(url);
-            var qr = await QuickFile.FromMessage(response);
-            return qr.ToApiResponse();
-        }
+public static class HttpClientExtensions {
+	public static async Task<ApiResponse<T>> Get<T>(this HttpClient client, string url) {
+		HttpResponseMessage response = await client.GetAsync(url);
+		QuickResponse<T> qr = await QuickResponse<T>.FromMessage(response);
+		return qr.ToApiResponse();
+	}
 
-        public static async Task<ApiResponse<T>> Post<T>(this HttpClient client, string url, IEnumerable<KeyValuePair<string, string>> parameters)
-        {
-            var response = await client.PostAsync(url, HttpClientHelpers.GetPostBody(parameters));
-            var qr = await QuickResponse<T>.FromMessage(response);
-            return qr.ToApiResponse();
-        }
+	public static async Task<ApiResponse> GetFile(this HttpClient client, string url) {
+		HttpResponseMessage response = await client.GetAsync(url);
+		QuickFile qr = await QuickFile.FromMessage(response);
+		return qr.ToApiResponse();
+	}
 
-        public static async Task<ApiResponse<T>> Post<T>(this HttpClient client, string url, object data)
-        {
-            var response = await client.PostAsync(url, HttpClientHelpers.GetJsonBody(data));
-            var qr = await QuickResponse<T>.FromMessage(response);
-            return qr.ToApiResponse();
-        }
+	public static async Task<ApiResponse<T>> Post<T>(this HttpClient client, string url, IEnumerable<KeyValuePair<string, string>> parameters) {
+		HttpResponseMessage response = await client.PostAsync(url, HttpClientHelpers.GetPostBody(parameters));
+		QuickResponse<T> qr = await QuickResponse<T>.FromMessage(response);
+		return qr.ToApiResponse();
+	}
 
-        public static async Task<ApiResponse<T>> PostMultipart<T>(this HttpClient client, string url, IEnumerable<KeyValuePair<string, string>> parameters, IEnumerable<HttpFile> files)
-        {
-            var response = await client.PostAsync(url, HttpClientHelpers.GetMultipartFormDataContentBody(parameters, files)).ConfigureAwait(false);
-            var qr = await QuickResponse<T>.FromMessage(response);
-            return qr.ToApiResponse();
-        }
+	public static async Task<ApiResponse<T>> Post<T>(this HttpClient client, string url, object data) {
+		HttpResponseMessage response = await client.PostAsync(url, HttpClientHelpers.GetJsonBody(data));
+		QuickResponse<T> qr = await QuickResponse<T>.FromMessage(response);
+		return qr.ToApiResponse();
+	}
 
-        public static async Task<ApiResponse> Delete(this HttpClient client, string url)
-        {
-            var response = await client.DeleteAsync(url);
-            var qr = await QuickResponse.FromMessage(response);
-            return qr.ToApiResponse();
-        }
-    }
+	public static async Task<ApiResponse<T>> PostMultipart<T>(this HttpClient client, string url, IEnumerable<KeyValuePair<string, string>> parameters, IEnumerable<HttpFile> files) {
+		HttpResponseMessage response = await client.PostAsync(url, HttpClientHelpers.GetMultipartFormDataContentBody(parameters, files)).ConfigureAwait(false);
+		QuickResponse<T> qr = await QuickResponse<T>.FromMessage(response);
+		return qr.ToApiResponse();
+	}
 
-    public class QuickResponse
-    {
-        public HttpResponseMessage Message { get; set; }
+	public static async Task<ApiResponse> Delete(this HttpClient client, string url) {
+		HttpResponseMessage response = await client.DeleteAsync(url);
+		QuickResponse qr = await QuickResponse.FromMessage(response);
+		return qr.ToApiResponse();
+	}
+}
 
-        public string ResponseBody { get; set; }
+public class QuickResponse {
+	public HttpResponseMessage? Message { get; set; }
 
-        public IList<ApiError> Errors { get; set; }
+	public string? ResponseBody { get; set; }
 
-        public QuickResponse()
-        {
-            Errors = new List<ApiError>();
-        }
+	public IList<ApiError> Errors { get; set; } = new List<ApiError>();
 
-        public ApiResponse ToApiResponse()
-        {
-            return new ApiResponse
-            {
-                Errors = Errors
-            };
-        }
+	public ApiResponse ToApiResponse() => new() {
+		Errors = Errors
+	};
 
-        public static async Task<QuickResponse> FromMessage(HttpResponseMessage message)
-        {
-            var response = new QuickResponse();
-            response.Message = message;
-            response.ResponseBody = await message.Content.ReadAsStringAsync();
+	public static async Task<QuickResponse> FromMessage(HttpResponseMessage message) {
+		QuickResponse response = new() {
+			Message = message,
+			ResponseBody = await message.Content.ReadAsStringAsync()
+		};
 
-            if (!message.IsSuccessStatusCode)
-            {
-                response.HandleFailedCall();
-            }
+		if (!message.IsSuccessStatusCode) {
+			response.HandleFailedCall();
+		}
 
-            return response;
-        }
+		return response;
+	}
 
-        protected void HandleFailedCall()
-        {
-            try
-            {
-                Errors = JsonConvert.DeserializeObject<List<ApiError>>(ResponseBody) ?? new List<ApiError>();
+	protected void HandleFailedCall() {
+		try {
+			Errors = JsonConvert.DeserializeObject<List<ApiError>>(ResponseBody ?? string.Empty) ?? new List<ApiError>();
 
-                if (!Errors.Any())
-                {
-                    Errors.Add(new ApiError
-                    {
-                        ErrorMessage = !string.IsNullOrEmpty(ResponseBody) ? ResponseBody : Message.StatusCode.ToString()
-                    });
-                }
-            }
-            catch (Exception)
-            {
-                Errors.Add(new ApiError
-                {
-                    ErrorMessage = !string.IsNullOrEmpty(ResponseBody) ? ResponseBody : Message.StatusCode.ToString()
-                });
-            }
-        }
-    }
+			if (!Errors.Any()) {
+				Errors.Add(new ApiError {
+					ErrorMessage = !string.IsNullOrEmpty(ResponseBody) ? ResponseBody : Message?.StatusCode.ToString()
+				});
+			}
+		} catch (Exception) {
+			Errors.Add(new ApiError {
+				ErrorMessage = !string.IsNullOrEmpty(ResponseBody) ? ResponseBody : Message?.StatusCode.ToString()
+			});
+		}
+	}
+}
 
-    public class QuickResponse<T> : QuickResponse
-    {
-        public T Data { get; set; }
+public class QuickResponse<T> : QuickResponse {
+	public T? Data { get; set; }
 
-        public new ApiResponse<T> ToApiResponse()
-        {
-            return new ApiResponse<T>
-            {
-                Errors = Errors,
-                Data = Data
-            };
-        }
+	public new ApiResponse<T> ToApiResponse() => new() {
+		Errors = Errors,
+		Data = Data
+	};
 
-        public new static async Task<QuickResponse<T>> FromMessage(HttpResponseMessage message)
-        {
-            var response = new QuickResponse<T>();
-            response.Message = message;
-            response.ResponseBody = await message.Content.ReadAsStringAsync();
+	public new static async Task<QuickResponse<T>> FromMessage(HttpResponseMessage message) {
+		QuickResponse<T> response = new() {
+			Message = message,
+			ResponseBody = await message.Content.ReadAsStringAsync()
+		};
 
-            if (message.IsSuccessStatusCode)
-            {
-                try
-                {
-                    response.Data = JsonConvert.DeserializeObject<T>(response.ResponseBody);
-                }
-                catch (Exception)
-                {
-                    response.HandleFailedCall();
-                }
-            }
-            else
-            {
-                response.HandleFailedCall();
-            }
+		if (message.IsSuccessStatusCode) {
+			try {
+				response.Data = JsonConvert.DeserializeObject<T>(response.ResponseBody);
+			} catch (Exception) {
+				response.HandleFailedCall();
+			}
+		} else {
+			response.HandleFailedCall();
+		}
 
-            return response;
-        }
-    }
+		return response;
+	}
+}
 
-    public class QuickFile : QuickResponse<Stream>
-    {
-        public new static async Task<QuickFile> FromMessage(HttpResponseMessage message)
-        {
-            var response = new QuickFile();
-            response.Message = message;
-            response.ResponseBody = await message.Content.ReadAsStringAsync();
+public class QuickFile : QuickResponse<Stream> {
+	public new static async Task<QuickFile> FromMessage(HttpResponseMessage message) {
+		QuickFile response = new() {
+			Message = message,
+			ResponseBody = await message.Content.ReadAsStringAsync()
+		};
 
-            if (message.IsSuccessStatusCode)
-            {
-                response.Data = await message.Content.ReadAsStreamAsync();
-            }
-            else
-            {
-                response.HandleFailedCall();
-            }
+		if (message.IsSuccessStatusCode) {
+			response.Data = await message.Content.ReadAsStreamAsync();
+		} else {
+			response.HandleFailedCall();
+		}
 
-            return response;
-        }
-    }
+		return response;
+	}
 }

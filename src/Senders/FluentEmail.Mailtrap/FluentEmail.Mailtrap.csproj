@@ -5,7 +5,8 @@
     <AssemblyTitle>Fluent Email - MailTrap</AssemblyTitle>
     <Authors>Luke Lowrey;Ben Cull;Anthony Zigenbine;Github Contributors</Authors>
     <PackageTags>$(PackageTags);mailtrap</PackageTags>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

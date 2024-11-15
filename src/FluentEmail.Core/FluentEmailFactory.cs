@@ -1,14 +1,12 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace FluentEmail.Core
-{
-    public class FluentEmailFactory : IFluentEmailFactory
-    {
-        private IServiceProvider services;
+namespace FluentEmail.Core;
 
-        public FluentEmailFactory(IServiceProvider services) => this.services = services;
+public class FluentEmailFactory : IFluentEmailFactory {
+	private readonly IServiceProvider _services;
 
-        public IFluentEmail Create() => services.GetService<IFluentEmail>();
-    }
+	public FluentEmailFactory(IServiceProvider services) => _services = services;
+
+	public IFluentEmail Create() => _services.GetService<IFluentEmail>()!;
 }

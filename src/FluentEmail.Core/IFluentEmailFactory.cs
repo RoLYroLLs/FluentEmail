@@ -1,7 +1,5 @@
-﻿namespace FluentEmail.Core
-{
-    public interface IFluentEmailFactory
-    {
-        IFluentEmail Create();
-    }
+﻿namespace FluentEmail.Core;
+
+public interface IFluentEmailFactory {
+	IFluentEmail Create();
 }

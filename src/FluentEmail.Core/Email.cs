@@ -403,7 +403,7 @@ public class Email : IFluentEmail {
 	}
 
 	public IFluentEmail AttachFromFilename(string filename, string? contentType = null, string? attachmentName = null) {
-		FileStream stream = File.OpenRead(filename);
+		MemoryStream stream = new(File.ReadAllBytes(filename));
 		Attach(new Attachment {
 			Data = stream,
 			Filename = attachmentName ?? filename,

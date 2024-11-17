@@ -146,4 +146,30 @@ public class SendGridSenderTests {
 
 		Assert.That(response.Successful, Is.True);
 	}
+
+	[Test, Ignore("No sendgrid credentials")]
+	public async Task CanSendEmailWithInlineAttachments() {
+		const string subject = "SendMail With Inline Attachments Test";
+		const string body = "This email is testing the inline attachment functionality of SendGrid Sender.";
+
+		await using FileStream stream = File.OpenRead($"{Directory.GetCurrentDirectory()}/logotest.png");
+		Attachment attachment = new() {
+			Data = stream,
+			ContentType = "image/png",
+			Filename = "logotest.png",
+			IsInline = true,
+			ContentId = "logotest_id"
+		};
+
+		IFluentEmail email = Email
+			.From(FromEmail, FromName)
+			.To(ToEmail, ToName)
+			.Subject(subject)
+			.Body(body)
+			.Attach(attachment);
+
+		Core.Models.SendResponse response = await email.SendAsync();
+
+		Assert.That(response.Successful, Is.True);
+	}
 }

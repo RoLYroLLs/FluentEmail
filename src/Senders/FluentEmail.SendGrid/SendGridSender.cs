@@ -14,10 +14,17 @@ namespace FluentEmail.SendGrid;
 
 public class SendGridSender : ISendGridSender {
 	private readonly string _apiKey;
+	private readonly string? _host = null;
 	private readonly bool _sandBoxMode;
 
 	public SendGridSender(string apiKey, bool sandBoxMode = false) {
 		_apiKey = apiKey;
+		_sandBoxMode = sandBoxMode;
+	}
+
+	public SendGridSender(string apiKey, string host, bool sandBoxMode = false) {
+		_apiKey = apiKey;
+		_host = host;
 		_sandBoxMode = sandBoxMode;
 	}
 	public SendResponse Send(IFluentEmail email, CancellationToken? token = null) => SendAsync(email, token).GetAwaiter().GetResult();
@@ -127,7 +134,8 @@ public class SendGridSender : ISendGridSender {
 	}
 
 	private async Task<SendResponse> SendViaSendGrid(SendGridMessage mailMessage, CancellationToken? token = null) {
-		SendGridClient sendGridClient = new(_apiKey);
+		SendGridClient sendGridClient = _host != null ? new SendGridClient(_apiKey, _host) : new SendGridClient(_apiKey);
+
 		Response sendGridResponse = await sendGridClient.SendEmailAsync(mailMessage, token.GetValueOrDefault());
 
 		SendResponse sendResponse = new();

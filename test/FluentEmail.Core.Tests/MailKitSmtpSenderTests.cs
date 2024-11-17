@@ -78,6 +78,72 @@ public class MailKitSmtpSenderTests {
 	}
 
 	[Test]
+	[TestCase]
+	[TestCase("logotest.png")]
+	public async Task CanSendEmailWithInlineImages(string? contentId = null) {
+		await using FileStream stream = File.OpenRead($"{Path.Combine(Directory.GetCurrentDirectory(), "logotest.png")}");
+		Attachment attachment = new() {
+			IsInline = true,
+			Data = stream,
+			ContentType = "image/png",
+			Filename = "logotest.png",
+			ContentId = contentId
+		};
+
+		IFluentEmail email = Email
+			.From(FromEmail)
+			.To(ToEmail)
+			.Subject(Subject)
+			.Body("<html>Inline image here: <img src=\"cid:logotest.png\"><p>You should see an image without an attachment, or without a download prompt, depending on the email client.</p></html>", true)
+			.Attach(attachment);
+
+		Core.Models.SendResponse response = await email.SendAsync();
+
+		IEnumerable<string> files = Directory.EnumerateFiles(_tempDirectory, "*.eml");
+
+		Assert.That(response.Successful, Is.True);
+		Assert.That(files, Is.Not.Empty);
+	}
+
+	[Test]
+	public async Task CanSendEmailWithInlineImagesAndAttachmentTogether() {
+		MemoryStream attachmentStream = new();
+		StreamWriter sw = new(attachmentStream);
+		await sw.WriteLineAsync("Hey this is some text in an attachment");
+		await sw.FlushAsync();
+		attachmentStream.Seek(0, SeekOrigin.Begin);
+
+		Attachment attachment = new() {
+			Data = attachmentStream,
+			ContentType = "text/plain",
+			Filename = "MailKitAttachment.txt",
+		};
+
+		await using FileStream inlineStream = File.OpenRead($"{Path.Combine(Directory.GetCurrentDirectory(), "logotest.png")}");
+
+		Attachment attachmentInline = new() {
+			IsInline = true,
+			Data = inlineStream,
+			ContentType = "image/png",
+			Filename = "logotest.png",
+		};
+
+		IFluentEmail email = Email
+			.From(FromEmail)
+			.To(ToEmail)
+			.Subject(Subject)
+			.Body("<html>Inline image here: <img src=\"cid:logotest.png\"><p>You should see an image inline without a picture attachment.</p><p>A single .txt file should also be attached.</p></html>", true)
+			.Attach(attachment)
+			.Attach(attachmentInline);
+
+		Core.Models.SendResponse response = await email.SendAsync();
+
+		IEnumerable<string> files = Directory.EnumerateFiles(_tempDirectory, "*.eml");
+		Assert.That(response.Successful, Is.True);
+		Assert.That(files, Is.Not.Empty);
+	}
+
+	[Test]
 	public async Task CanSendAsyncHtmlAndPlaintextTogether() {
 		IFluentEmail email = Email
 			.From(FromEmail)

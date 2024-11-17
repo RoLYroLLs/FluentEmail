@@ -177,8 +177,14 @@ public class MailKitSender : ISender {
 		}
 
 		data.Attachments.ForEach(x => {
-			MimeEntity attachment = builder.Attachments.Add(x.Filename, x.Data, ContentType.Parse(x.ContentType));
-			attachment.ContentId = x.ContentId;
+			ContentType? contentType = ContentType.Parse(x.ContentType);
+			if (x.IsInline) {
+				MimeEntity attachment = builder.LinkedResources.Add(x.Filename, x.Data, contentType);
+				attachment.ContentId = x.ContentId ?? x.Filename;
+			} else {
+				MimeEntity attachment = builder.Attachments.Add(x.Filename, x.Data, contentType);
+				attachment.ContentId = x.ContentId;
+			}
 		});
 
 		message.Body = builder.ToMessageBody();

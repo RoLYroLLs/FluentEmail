@@ -1,6 +1,7 @@
 ﻿using FluentEmail.Core;
 using FluentEmail.Core.Models;
 using Newtonsoft.Json;
+using NSubstitute;
 
 namespace FluentEmail.Mailgun.Tests;
 
@@ -12,7 +13,7 @@ public class MailgunSenderTests {
 
 	[SetUp]
 	public void SetUp() {
-		MailgunSender sender = new("sandboxcf5f41bbf2f84f15a386c60e253b5fe9.mailgun.org", "key-8d32c046d7f14ada8d5ba8253e3e30de");
+		MailgunSender sender = new(Substitute.For<IHttpClientFactory>());
 		Email.DefaultSender = sender;
 	}
 

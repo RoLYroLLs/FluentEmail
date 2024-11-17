@@ -91,7 +91,7 @@ public class MailKitSender : ISender {
 
 		try {
 			if (_smtpClientOptions.UsePickupDirectory) {
-				await SaveToPickupDirectory(message, _smtpClientOptions.MailPickupDirectory);
+				response.MessageId = await SaveToPickupDirectory(message, _smtpClientOptions.MailPickupDirectory);
 				return response;
 			}
 
@@ -129,16 +129,19 @@ public class MailKitSender : ISender {
 	/// </summary>
 	/// <param name="message">Message to save for pickup.</param>
 	/// <param name="pickupDirectory">Pickup directory.</param>
-	private async Task SaveToPickupDirectory(MimeMessage message, string pickupDirectory) {
+	private async Task<string?> SaveToPickupDirectory(MimeMessage message, string pickupDirectory) {
+		string messageId = Guid.NewGuid().ToString();
 		// Note: this will require that you know where the specified pickup directory is.
-		string path = Path.Combine(pickupDirectory, Guid.NewGuid().ToString() + ".eml");
+		string path = Path.Combine(pickupDirectory, messageId + ".eml");
 
 		if (File.Exists(path))
-			return;
+			return null;
 
 		try {
+			Directory.CreateDirectory(pickupDirectory);
 			await using FileStream stream = new(path, FileMode.CreateNew);
 			await message.WriteToAsync(stream);
+			return messageId;
 		} catch (IOException) {
 			// The file may have been created between our File.Exists() check and
 			// our attempt to create the stream.

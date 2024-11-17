@@ -46,6 +46,11 @@ public class MailKitSender : ISender {
 			}
 
 			using SmtpClient client = new();
+
+			if (_smtpClientOptions.ServerCertificateValidationCallback != null) {
+				client.ServerCertificateValidationCallback = _smtpClientOptions.ServerCertificateValidationCallback;
+			}
+
 			if (_smtpClientOptions.SocketOptions.HasValue) {
 				client.Connect(
 					_smtpClientOptions.Server,
@@ -96,6 +101,11 @@ public class MailKitSender : ISender {
 			}
 
 			using SmtpClient client = new();
+
+			if (_smtpClientOptions.ServerCertificateValidationCallback != null) {
+				client.ServerCertificateValidationCallback = _smtpClientOptions.ServerCertificateValidationCallback;
+			}
+
 			if (_smtpClientOptions.SocketOptions.HasValue) {
 				await client.ConnectAsync(
 					_smtpClientOptions.Server,

@@ -47,6 +47,8 @@ public class MailKitSender : ISender {
 
 			using SmtpClient client = new();
 
+			client.CheckCertificateRevocation = _smtpClientOptions.CheckCertificateRevocation;
+
 			if (_smtpClientOptions.ServerCertificateValidationCallback != null) {
 				client.ServerCertificateValidationCallback = _smtpClientOptions.ServerCertificateValidationCallback;
 			}

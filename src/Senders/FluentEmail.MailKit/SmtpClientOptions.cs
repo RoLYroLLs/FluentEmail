@@ -15,4 +15,6 @@ public class SmtpClientOptions {
 	public string MailPickupDirectory { get; set; } = string.Empty;
 	public SecureSocketOptions? SocketOptions { get; set; }
 	public RemoteCertificateValidationCallback? ServerCertificateValidationCallback { get; set; }
+	/// <inheritdoc cref="MailKit.IMailService.CheckCertificateRevocation" />
+	public bool CheckCertificateRevocation { get; set; } = true;
 }

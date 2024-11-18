@@ -125,7 +125,8 @@ public class SmtpSender : ISender {
 		data.Attachments.ForEach(x => {
 			if (x.Data != null) {
 				System.Net.Mail.Attachment a = new(x.Data, x.Filename, x.ContentType) {
-					ContentId = x.ContentId
+					ContentId = x.ContentId,
+					ContentDisposition = { Inline = x.IsInline },
 				};
 
 				message.Attachments.Add(a);

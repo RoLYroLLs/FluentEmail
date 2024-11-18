@@ -70,6 +70,34 @@ public class FluentEmailTests {
 	}
 
 	[Test]
+	public void Can_Add_Multiple_Recipients_From_String_List() {
+		List<string> emails = [
+			"email1@email.com",
+			"email2@email.com"
+		];
+
+		IFluentEmail email = Email
+			.From(FromEmail)
+			.To(emails);
+
+		Assert.That(email.Data.ToAddresses.Count, Is.EqualTo(2));
+	}
+
+	[Test]
+	public void Can_Add_Multiple_Recipients_From_String_Array() {
+		string[] emails = [
+			"email1@email.com",
+			"email2@email.com"
+		];
+
+		IFluentEmail email = Email
+			.From(FromEmail)
+			.To(emails);
+
+		Assert.That(email.Data.ToAddresses.Count, Is.EqualTo(2));
+	}
+
+	[Test]
 	public void Can_Add_Multiple_CCRecipients_From_List() {
 		List<Address> emails = [
 			new("email1@email.com"),

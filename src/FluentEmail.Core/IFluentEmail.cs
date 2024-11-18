@@ -37,6 +37,20 @@ public interface IFluentEmail : IHideObjectMembers {
 	IFluentEmail To(IEnumerable<Address> mailAddresses);
 
 	/// <summary>
+	/// Adds all recipients in list to email
+	/// </summary>
+	/// <param name="mailAddresses">List of recipients</param>
+	/// <returns>Instance of the Email class</returns>
+	IFluentEmail To(IEnumerable<string> mailAddresses);
+
+	/// <summary>
+	/// Adds all recipients in list to email
+	/// </summary>
+	/// <param name="mailAddresses">List of recipients</param>
+	/// <returns>Instance of the Email class</returns>
+	IFluentEmail To(string[] mailAddresses);
+
+	/// <summary>
 	/// Adds a Carbon Copy to the email
 	/// </summary>
 	/// <param name="emailAddress">Email address to cc</param>

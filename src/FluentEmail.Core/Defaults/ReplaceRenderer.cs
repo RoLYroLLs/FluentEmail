@@ -11,8 +11,7 @@ public class ReplaceRenderer : ITemplateRenderer {
 		if (model == null) throw new ArgumentNullException(nameof(model));
 
 		foreach (PropertyInfo pi in model.GetType().GetRuntimeProperties()) {
-			string value = pi.GetValue(model, null)?.ToString() ?? string.Empty;
-			template = template.Replace($"##{pi.Name}##", value);
+			template = template.Replace($"##{pi.Name}##", pi.GetValue(model, null)?.ToString());
 		}
 
 		return template;

@@ -4,6 +4,8 @@
     <Description>Send emails via MailGun using their REST API</Description>
     <AssemblyTitle>Fluent Email - MailGun</AssemblyTitle>
     <PackageTags>$(PackageTags);mailgun</PackageTags>
+    <PackageId>RREnt.$(AssemblyName)</PackageId>
+    <Product>RREnt.$(AssemblyName)</Product>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Nullable>enable</Nullable>
   </PropertyGroup>

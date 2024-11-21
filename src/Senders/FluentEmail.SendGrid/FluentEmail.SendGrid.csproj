@@ -5,6 +5,8 @@
     <AssemblyTitle>Fluent Email - SendGrid</AssemblyTitle>
     <Authors>Luke Lowrey;Ben Cull;Ricardo Santos;Github Contributors</Authors>
     <PackageTags>$(PackageTags);sendgrid</PackageTags>
+    <PackageId>RREnt.$(AssemblyName)</PackageId>
+    <Product>RREnt.$(AssemblyName)</Product>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Nullable>enable</Nullable>
   </PropertyGroup>

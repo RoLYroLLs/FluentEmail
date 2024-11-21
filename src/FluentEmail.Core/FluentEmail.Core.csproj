@@ -6,6 +6,8 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <Nullable>enable</Nullable>
     <AssetsDirectory>../../assets</AssetsDirectory>
+    <PackageId>RREnt.$(AssemblyName)</PackageId>
+    <Product>RREnt.$(AssemblyName)</Product>
   </PropertyGroup>
 
   <!--<Target Name="PostcompileScript" AfterTargets="Build" Condition=" '$(IsCrossTargetingBuild)' != 'true' ">

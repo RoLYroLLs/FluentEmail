@@ -4,6 +4,8 @@
     <Description>Send emails via Microsoft Graph API</Description>
     <AssemblyTitle>Fluent Email - Graph</AssemblyTitle>
     <PackageTags>$(PackageTags);graph</PackageTags>
+    <PackageId>RREnt.$(AssemblyName)</PackageId>
+    <Product>RREnt.$(AssemblyName)</Product>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Nullable>enable</Nullable>
   </PropertyGroup>

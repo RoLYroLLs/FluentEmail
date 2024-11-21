@@ -5,6 +5,8 @@
     <AssemblyTitle>Fluent Email - Liquid</AssemblyTitle>
     <Authors>Marko Lahma;$(Authors)</Authors>
     <PackageTags>$(PackageTags);liquid</PackageTags>
+    <PackageId>RREnt.$(AssemblyName)</PackageId>
+    <Product>RREnt.$(AssemblyName)</Product>
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssetsDirectory>../../../assets</AssetsDirectory>
     <Nullable>enable</Nullable>

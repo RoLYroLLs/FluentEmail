@@ -2,12 +2,13 @@
 
   <PropertyGroup>
 
-    <Authors>Luke Lowrey;Ben Cull;Github Contributors</Authors>
+    <Authors>Luke Lowrey;Ben Cull;Github Contributors;John Campion;RoLY roLLs</Authors>
     <PackageTags>email;smtp;fluent;fluentemail</PackageTags>
-    <PackageIconUrl>https://raw.githubusercontent.com/lukencode/FluentEmail/master/assets/fluentemail_logo_64x64.png</PackageIconUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/RoLYroLLsEnterprises/RREnt.FluentEmail/main/assets/fluentemail_logo_64x64.png</PackageIconUrl>
     <PackageIcon>fluentemail_logo_64x64.png</PackageIcon>
-    <PackageProjectUrl>https://github.com/lukencode/FluentEmail</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/lukencode/FluentEmail</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/RoLYroLLsEnterprises/RREnt.FluentEmail</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/RoLYroLLsEnterprises/RREnt.FluentEmail</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Version>3.0.2</Version>

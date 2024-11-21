@@ -8,6 +8,7 @@
     <PackageIcon>fluentemail_logo_64x64.png</PackageIcon>
     <PackageProjectUrl>https://github.com/lukencode/FluentEmail</PackageProjectUrl>
     <RepositoryUrl>https://github.com/lukencode/FluentEmail</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Version>3.0.2</Version>
 

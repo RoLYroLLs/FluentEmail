@@ -1,123 +1,171 @@
-﻿using System.IO;
-using System.Threading.Tasks;
-using FluentEmail.Core;
+﻿using FluentEmail.Core;
 using FluentEmail.MailKitSmtp;
-using NUnit.Framework;
 using Attachment = FluentEmail.Core.Models.Attachment;
 
-namespace FluentEmail.MailKit.Tests
-{
-    [NonParallelizable]
-    public class MailKitSmtpSenderTests
-    {
-        // Warning: To pass, an smtp listener must be running on localhost:25.
+namespace FluentEmail.MailKit.Tests;
 
-        const string toEmail = "bob@test.com";
-        const string fromEmail = "johno@test.com";
-        const string subject = "sup dawg";
-        const string body = "what be the hipitity hap?";
+[NonParallelizable]
+public class MailKitSmtpSenderTests {
+	// Warning: To pass, an smtp listener must be running on localhost:25.
 
-        private readonly string tempDirectory;
+	public const string ToEmail = "bob@test.com";
+	public const string FromEmail = "johno@test.com";
+	public const string Subject = "sup dawg";
+	public const string Body = "what be the hipitity hap?";
 
-        public MailKitSmtpSenderTests()
-        {
-            tempDirectory = Path.Combine(Path.GetTempPath(), "EmailTest");
-        }
+	private readonly string _tempDirectory = Path.Combine(Path.GetTempPath(), "EmailTest");
 
-        [SetUp]
-        public void SetUp()
-        {
-            var sender = new MailKitSender(new SmtpClientOptions
-            { 
-                 Server = "localhost",
-                 Port = 25,
-                 UseSsl = false,
-                 RequiresAuthentication = false,
-                 UsePickupDirectory = true,
-                 MailPickupDirectory = Path.Combine(Path.GetTempPath(), "EmailTest")
-            });
+	[SetUp]
+	public void SetUp() {
+		MailKitSender sender = new(new SmtpClientOptions {
+			Server = "localhost",
+			Port = 25,
+			UseSsl = false,
+			RequiresAuthentication = false,
+			UsePickupDirectory = true,
+			MailPickupDirectory = Path.Combine(Path.GetTempPath(), "EmailTest")
+		});
 
-            Email.DefaultSender = sender;
-            Directory.CreateDirectory(tempDirectory);
-        }
+		Email.DefaultSender = sender;
+		Directory.CreateDirectory(_tempDirectory);
+	}
 
-        [TearDown]
-        public void TearDown()
-        {
-            Directory.Delete(tempDirectory, true);
-        }
+	[TearDown]
+	public void TearDown() => Directory.Delete(_tempDirectory, true);
 
-        [Test]
-        public void CanSendEmail()
-        {
-            var email = Email
-                .From(fromEmail)
-                .To(toEmail)
-                .Body("<h2>Test</h2>", true);
+	[Test]
+	public void CanSendEmail() {
+		IFluentEmail email = Email
+			.From(FromEmail)
+			.To(ToEmail)
+			.Body("<h2>Test</h2>", true);
 
-            var response = email.Send();
+		Core.Models.SendResponse response = email.Send();
 
-            var files = Directory.EnumerateFiles(tempDirectory, "*.eml");
-            Assert.IsTrue(response.Successful);
-            Assert.IsNotEmpty(files);
-        }
+		IEnumerable<string> files = Directory.EnumerateFiles(_tempDirectory, "*.eml");
 
-        [Test]
-        public async Task CanSendEmailWithAttachments()
-        {
-            var stream = new MemoryStream();
-            var sw = new StreamWriter(stream);
-            sw.WriteLine("Hey this is some text in an attachment");
-            sw.Flush();
-            stream.Seek(0, SeekOrigin.Begin);
+		Assert.That(response.Successful, Is.True);
+		Assert.That(files, Is.Not.Empty);
+	}
 
-            var attachment = new Attachment
-            {
-                Data = stream,
-                ContentType = "text/plain",
-                Filename = "MailKitAttachment.txt"
-            };
+	[Test]
+	public async Task CanSendEmailWithAttachments() {
+		MemoryStream stream = new();
+		StreamWriter sw = new(stream);
+		await sw.WriteLineAsync("Hey this is some text in an attachment");
+		await sw.FlushAsync();
+		stream.Seek(0, SeekOrigin.Begin);
 
-            var email = Email
-                .From(fromEmail)
-                .To(toEmail)
-                .Subject(subject)
-                .Body(body)
-                .Attach(attachment);
+		Attachment attachment = new() {
+			Data = stream,
+			ContentType = "text/plain",
+			Filename = "MailKitAttachment.txt"
+		};
 
-            var response = await email.SendAsync();
+		IFluentEmail email = Email
+			.From(FromEmail)
+			.To(ToEmail)
+			.Subject(Subject)
+			.Body(Body)
+			.Attach(attachment);
 
-            var files = Directory.EnumerateFiles(tempDirectory, "*.eml");
-            Assert.IsTrue(response.Successful);
-            Assert.IsNotEmpty(files);
-        }
+		Core.Models.SendResponse response = await email.SendAsync();
 
-        [Test]
-        public async Task CanSendAsyncHtmlAndPlaintextTogether()
-        {
-            var email = Email
-                .From(fromEmail)
-                .To(toEmail)
-                .Body("<h2>Test</h2><p>some body text</p>", true)
-                .PlaintextAlternativeBody("Test - Some body text");
+		IEnumerable<string> files = Directory.EnumerateFiles(_tempDirectory, "*.eml");
 
-            var response = await email.SendAsync();
+		Assert.That(response.Successful, Is.True);
+		Assert.That(files, Is.Not.Empty);
+	}
 
-            Assert.IsTrue(response.Successful);
-        }
+	[Test]
+	[TestCase]
+	[TestCase("logotest.png")]
+	public async Task CanSendEmailWithInlineImages(string? contentId = null) {
+		await using FileStream stream = File.OpenRead($"{Path.Combine(Directory.GetCurrentDirectory(), "logotest.png")}");
+		Attachment attachment = new() {
+			IsInline = true,
+			Data = stream,
+			ContentType = "image/png",
+			Filename = "logotest.png",
+			ContentId = contentId
+		};
 
-        [Test]
-        public void CanSendHtmlAndPlaintextTogether()
-        {
-            var email = Email
-                .From(fromEmail)
-                .To(toEmail)
-                .Body("<h2>Test</h2><p>some body text</p>", true)
-                .PlaintextAlternativeBody("Test - Some body text");
+		IFluentEmail email = Email
+			.From(FromEmail)
+			.To(ToEmail)
+			.Subject(Subject)
+			.Body("<html>Inline image here: <img src=\"cid:logotest.png\"><p>You should see an image without an attachment, or without a download prompt, depending on the email client.</p></html>", true)
+			.Attach(attachment);
 
-            var response = email.Send();
+		Core.Models.SendResponse response = await email.SendAsync();
 
-            Assert.IsTrue(response.Successful);
-        }
-    }
+		IEnumerable<string> files = Directory.EnumerateFiles(_tempDirectory, "*.eml");
+
+		Assert.That(response.Successful, Is.True);
+		Assert.That(files, Is.Not.Empty);
+	}
+
+	[Test]
+	public async Task CanSendEmailWithInlineImagesAndAttachmentTogether() {
+		MemoryStream attachmentStream = new();
+		StreamWriter sw = new(attachmentStream);
+		await sw.WriteLineAsync("Hey this is some text in an attachment");
+		await sw.FlushAsync();
+		attachmentStream.Seek(0, SeekOrigin.Begin);
+
+		Attachment attachment = new() {
+			Data = attachmentStream,
+			ContentType = "text/plain",
+			Filename = "MailKitAttachment.txt",
+		};
+
+		await using FileStream inlineStream = File.OpenRead($"{Path.Combine(Directory.GetCurrentDirectory(), "logotest.png")}");
+
+		Attachment attachmentInline = new() {
+			IsInline = true,
+			Data = inlineStream,
+			ContentType = "image/png",
+			Filename = "logotest.png",
+		};
+
+		IFluentEmail email = Email
+			.From(FromEmail)
+			.To(ToEmail)
+			.Subject(Subject)
+			.Body("<html>Inline image here: <img src=\"cid:logotest.png\"><p>You should see an image inline without a picture attachment.</p><p>A single .txt file should also be attached.</p></html>", true)
+			.Attach(attachment)
+			.Attach(attachmentInline);
+
+		Core.Models.SendResponse response = await email.SendAsync();
+
+		IEnumerable<string> files = Directory.EnumerateFiles(_tempDirectory, "*.eml");
+		Assert.That(response.Successful, Is.True);
+		Assert.That(files, Is.Not.Empty);
+	}
+
+	[Test]
+	public async Task CanSendAsyncHtmlAndPlaintextTogether() {
+		IFluentEmail email = Email
+			.From(FromEmail)
+			.To(ToEmail)
+			.Body("<h2>Test</h2><p>some body text</p>", true)
+			.PlaintextAlternativeBody("Test - Some body text");
+
+		Core.Models.SendResponse response = await email.SendAsync();
+
+		Assert.That(response.Successful, Is.True);
+	}
+
+	[Test]
+	public void CanSendHtmlAndPlaintextTogether() {
+		IFluentEmail email = Email
+			.From(FromEmail)
+			.To(ToEmail)
+			.Body("<h2>Test</h2><p>some body text</p>", true)
+			.PlaintextAlternativeBody("Test - Some body text");
+
+		Core.Models.SendResponse response = email.Send();
+
+		Assert.That(response.Successful, Is.True);
+	}
 }

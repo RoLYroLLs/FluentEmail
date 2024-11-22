@@ -1,62 +1,51 @@
-﻿using System.IO;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using FluentEmail.Core.Models;
-using NUnit.Framework;
 
-namespace FluentEmail.Core.Tests
-{
-    [TestFixture]
-    public class AttachmentTests
-    {
-        private Assembly ThisAssembly() => this.GetType().GetTypeInfo().Assembly;
-        const string toEmail = "bob@test.com";
-        const string fromEmail = "johno@test.com";
-        const string subject = "sup dawg";
+namespace FluentEmail.Core.Tests;
 
-        [Test]
-        public void Attachment_from_stream_Is_set()
-        {
-            using (var stream = File.OpenRead($"{Path.Combine(Directory.GetCurrentDirectory(), "test.txt")}"))
-            {
-                var attachment = new Attachment
-                {
-                    Data = stream,
-                    Filename = "Test.txt",
-                    ContentType = "text/plain"
-                };
+[TestFixture]
+public class AttachmentTests {
+	private Assembly ThisAssembly() => GetType().GetTypeInfo().Assembly;
+	private const string ToEmail = "bob@test.com";
+	public const string FromEmail = "johno@test.com";
+	public const string Subject = "sup dawg";
 
-                var email = Email.From(fromEmail)
-                    .To(toEmail)
-                    .Subject(subject)
-                    .Attach(attachment);
+	[Test]
+	public void Attachment_from_stream_Is_set() {
+		using FileStream stream = File.OpenRead($"{Path.Combine(Directory.GetCurrentDirectory(), "test.txt")}");
+		Attachment attachment = new() {
+			Data = stream,
+			Filename = "Test.txt",
+			ContentType = "text/plain"
+		};
 
-                Assert.AreEqual(20, email.Data.Attachments.First().Data.Length);
-            }
-        }
+		IFluentEmail email = Email.From(FromEmail)
+			.To(ToEmail)
+			.Subject(Subject)
+			.Attach(attachment);
 
-        [Test]
-        public void Attachment_from_filename_Is_set()
-        {
-            var email = Email.From(fromEmail)
-                .To(toEmail)
-                .Subject(subject)
-                .AttachFromFilename($"{Path.Combine(Directory.GetCurrentDirectory(), "test.txt")}", "text/plain");
+		Assert.That(email.Data.Attachments.First().Data?.Length, Is.EqualTo(20));
+	}
 
-            Assert.AreEqual(20, email.Data.Attachments.First().Data.Length);
-        }
+	[Test]
+	public void Attachment_from_filename_Is_set() {
+		IFluentEmail email = Email.From(FromEmail)
+			.To(ToEmail)
+			.Subject(Subject)
+			.AttachFromFilename($"{Path.Combine(Directory.GetCurrentDirectory(), "test.txt")}", "text/plain");
 
-        [Test]
-        public void Attachment_from_filename_AttachmentName_Is_set()
-        {
-            var attachmentName = "attachment.txt";
-            var email = Email.From(fromEmail)
-                .To(toEmail)
-                .Subject(subject)
-                .AttachFromFilename($"{Path.Combine(Directory.GetCurrentDirectory(), "test.txt")}", "text/plain", attachmentName);
+		Assert.That(email.Data.Attachments.First().Data?.Length, Is.EqualTo(20));
+	}
 
-            Assert.AreEqual(20, email.Data.Attachments.First().Data.Length);
-            Assert.AreEqual(attachmentName, email.Data.Attachments.First().Filename);
-        }
-    }
+	[Test]
+	public void Attachment_from_filename_AttachmentName_Is_set() {
+		string attachmentName = "attachment.txt";
+		IFluentEmail email = Email.From(FromEmail)
+			.To(ToEmail)
+			.Subject(Subject)
+			.AttachFromFilename($"{Path.Combine(Directory.GetCurrentDirectory(), "test.txt")}", "text/plain", attachmentName);
+
+		Assert.That(email.Data.Attachments.First().Data?.Length, Is.EqualTo(20));
+		Assert.That(email.Data.Attachments.First().Filename, Is.EqualTo(attachmentName));
+	}
 }

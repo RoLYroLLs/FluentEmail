@@ -1,95 +1,78 @@
-﻿using FluentEmail.Core;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using FluentEmail.Core;
 using FluentEmail.Core.Interfaces;
 using FluentEmail.Core.Models;
 using Microsoft.Exchange.WebServices.Data;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace FluentEmail.Exchange
-{
-    public class ExchangeSender : ISender
-    {
-        private readonly ExchangeService meExchangeClient;
+namespace FluentEmail.Exchange;
 
-        public ExchangeSender(ExchangeService paExchangeClient)
-        {
-            meExchangeClient = paExchangeClient;
-        }
+public class ExchangeSender : ISender {
+	private readonly ExchangeService _meExchangeClient;
 
-        public SendResponse Send(IFluentEmail email, CancellationToken? token = null)
-        {
-            return System.Threading.Tasks.Task.Run(() => SendAsync(email, token)).Result;
-        }
+	public ExchangeSender(ExchangeService paExchangeClient) => _meExchangeClient = paExchangeClient;
 
-        public async Task<SendResponse> SendAsync(IFluentEmail email, CancellationToken? token = null)
-        {
-            var response = new SendResponse();
+	public SendResponse Send(IFluentEmail email, CancellationToken? token = null) => System.Threading.Tasks.Task.Run(() => SendAsync(email, token)).Result;
 
-            var message = CreateMailMessage(email);
+	public async Task<SendResponse> SendAsync(IFluentEmail email, CancellationToken? token = null) {
+		SendResponse response = new();
 
-            if (token?.IsCancellationRequested ?? false)
-            {
-                response.ErrorMessages.Add("Message was cancelled by cancellation token.");
-                return response;
-            }
+		EmailMessage message = CreateMailMessage(email);
 
-            message.Save();
-            message.SendAndSaveCopy();
+		if (token?.IsCancellationRequested ?? false) {
+			response.ErrorMessages.Add("Message was cancelled by cancellation token.");
+			return response;
+		}
 
-            return response;
-        }
+		message.Save();
+		message.SendAndSaveCopy();
 
-        private EmailMessage CreateMailMessage(IFluentEmail paEmail)
-        {
-            var paData = paEmail.Data;
+		return response;
+	}
 
-            EmailMessage loExchangeMessage = new EmailMessage(meExchangeClient)
-            {
-                Subject = paData.Subject,
-                Body = paData.Body,
-            };
+	private EmailMessage CreateMailMessage(IFluentEmail paEmail) {
+		EmailData paData = paEmail.Data;
 
-            if (!string.IsNullOrEmpty(paData.FromAddress?.EmailAddress))
-                loExchangeMessage.From = new EmailAddress(paData.FromAddress.Name, paData.FromAddress.EmailAddress);
+		EmailMessage loExchangeMessage = new(_meExchangeClient) {
+			Subject = paData.Subject,
+			Body = paData.Body,
+		};
 
-            paData.ToAddresses.ForEach(x =>
-            {
-                loExchangeMessage.ToRecipients.Add(new EmailAddress(x.Name, x.EmailAddress));
-            });
+		if (!string.IsNullOrEmpty(paData.FromAddress?.EmailAddress))
+			loExchangeMessage.From = new EmailAddress(paData.FromAddress.Name, paData.FromAddress.EmailAddress);
 
-            paData.CcAddresses.ForEach(x =>
-            {
-                loExchangeMessage.CcRecipients.Add(new EmailAddress(x.Name, x.EmailAddress));
-            });
+		paData.ToAddresses.ForEach(x => {
+			loExchangeMessage.ToRecipients.Add(new EmailAddress(x.Name, x.EmailAddress));
+		});
 
-            paData.BccAddresses.ForEach(x =>
-            {
-                loExchangeMessage.BccRecipients.Add(new EmailAddress(x.EmailAddress, x.Name));
-            });
+		paData.CcAddresses.ForEach(x => {
+			loExchangeMessage.CcRecipients.Add(new EmailAddress(x.Name, x.EmailAddress));
+		});
 
-            switch (paData.Priority)
-            {
-                case Priority.Low:
-                    loExchangeMessage.Importance = Importance.Low;
-                    break;
+		paData.BccAddresses.ForEach(x => {
+			loExchangeMessage.BccRecipients.Add(new EmailAddress(x.EmailAddress, x.Name));
+		});
 
-                case Priority.Normal:
-                    loExchangeMessage.Importance = Importance.Normal;
-                    break;
+		switch (paData.Priority) {
+			case Priority.Low:
+				loExchangeMessage.Importance = Importance.Low;
+				break;
 
-                case Priority.High:
-                    loExchangeMessage.Importance = Importance.High;
-                    break;
-            }
+			case Priority.Normal:
+				loExchangeMessage.Importance = Importance.Normal;
+				break;
 
-            paData.Attachments.ForEach(x =>
-            {
-                // System.Net.Mail.Attachment a = new System.Net.Mail.Attachment(x.Data, x.Filename, x.ContentType);
-                // a.ContentId = x.ContentId;
-                loExchangeMessage.Attachments.AddFileAttachment(x.Filename, x.Data);
-            });
+			case Priority.High:
+				loExchangeMessage.Importance = Importance.High;
+				break;
+		}
 
-            return loExchangeMessage;
-        }
-    }
+		paData.Attachments.ForEach(x => {
+			//System.Net.Mail.Attachment a = new System.Net.Mail.Attachment(x.Data, x.Filename, x.ContentType);
+			//a.ContentId = x.ContentId;
+			loExchangeMessage.Attachments.AddFileAttachment(x.Filename, x.Data);
+		});
+
+		return loExchangeMessage;
+	}
 }

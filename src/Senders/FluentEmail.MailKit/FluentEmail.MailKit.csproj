@@ -5,15 +5,24 @@
     <AssemblyTitle>Fluent Email - MailKit</AssemblyTitle>
     <Authors>Luke Lowrey;Ben Cull;Matt Rutledge;Github Contributors</Authors>
     <PackageTags>$(PackageTags);mailkit</PackageTags>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>RREnt.$(AssemblyName)</PackageId>
+    <Product>RREnt.$(AssemblyName)</Product>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
     <RootNamespace>FluentEmail.MailKitSmtp</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\"/>
+    <None Include="CHANGELOG.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MailKit" Version="4.8.0" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\FluentEmail.Core\FluentEmail.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MailKit" Version="2.10.1" />
-  </ItemGroup>
 </Project>

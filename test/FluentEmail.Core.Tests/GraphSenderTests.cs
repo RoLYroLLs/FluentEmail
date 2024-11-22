@@ -1,100 +1,92 @@
 using FluentEmail.Core;
 using FluentEmail.Core.Models;
-using NUnit.Framework;
-using System;
-using System.IO;
-using System.Threading.Tasks;
 
-namespace FluentEmail.Graph.Tests
-{
-    public class Tests
-    {
-        //TODO: For these tests to pass you will need to supply the following details from an Azure AD / Office 365 Tenant
-        const string appId = ""; //Add your AAD Graph App ID here
-        const string tenantId = ""; //Add your AAD Tenant ID here
-        const string graphSecret = ""; //Add your AAD Graph Client Secret here
-        const string senderEmail = ""; //Add a sender email address from your Office 365 tenant
-        const string toEmail = "fluentemail@mailinator.com"; //change this if you like
-        private bool saveSent = false;
+namespace FluentEmail.Graph.Tests;
 
-        [SetUp]
-        public void Setup()
-        {
-            if (string.IsNullOrWhiteSpace(appId)) throw new ArgumentException("Graph App ID needs to be supplied");
-            if (string.IsNullOrWhiteSpace(tenantId)) throw new ArgumentException("Graph tenant ID needs to be supplied");
-            if (string.IsNullOrWhiteSpace(graphSecret)) throw new ArgumentException("Graph client secret needs to be supplied");
-            if (string.IsNullOrWhiteSpace(senderEmail)) throw new ArgumentException("Sender email address needs to be supplied");
+public class Tests {
+	//TODO: For these tests to pass you will need to supply the following details from an Azure AD / Office 365 Tenant
+	public const string AppId = ""; //Add your AAD Graph App ID here
+	public const string TenantId = ""; //Add your AAD Tenant ID here
+	public const string GraphSecret = ""; //Add your AAD Graph Client Secret here
+	public const string SenderEmail = ""; //Add a sender email address from your Office 365 tenant
+	public const string ToEmail = "fluentemail@mailinator.com"; //change this if you like
+	private const bool SaveSent = false;
 
-            var sender = new GraphSender(appId, tenantId, graphSecret, saveSent);
+	[SetUp]
+	public void Setup() {
+		if (string.IsNullOrWhiteSpace(AppId)) throw new ArgumentException("Graph App ID needs to be supplied");
+		if (string.IsNullOrWhiteSpace(TenantId)) throw new ArgumentException("Graph tenant ID needs to be supplied");
+		if (string.IsNullOrWhiteSpace(GraphSecret)) throw new ArgumentException("Graph client secret needs to be supplied");
+		if (string.IsNullOrWhiteSpace(SenderEmail)) throw new ArgumentException("Sender email address needs to be supplied");
 
-            Email.DefaultSender = sender;
-        }
+		GraphSender sender = new(AppId, TenantId, GraphSecret, SaveSent);
 
-        [Test, Ignore("Missing Graph credentials")]
-        public void CanSendEmail()
-        {
-            var email = Email
-                .From(senderEmail)
-                .To(toEmail)
-                .Subject("Test Email")
-                .Body("Test email from Graph sender unit test");
+		Email.DefaultSender = sender;
+	}
 
-            var response = email.Send();
-            Assert.IsTrue(response.Successful);
-        }
+	[Test, Ignore("Missing Graph credentials")]
+	public void CanSendEmail() {
+		IFluentEmail email = Email
+			.From(SenderEmail)
+			.To(ToEmail)
+			.Subject("Test Email")
+			.Body("Test email from Graph sender unit test");
 
-        [Test, Ignore("Missing Graph credentials")]
-        public async Task CanSendEmailAsync()
-        {
-            var email = Email
-                .From(senderEmail)
-                .To(toEmail)
-                .Subject("Test Async Email")
-                .Body("Test email from Graph sender unit test");
+		SendResponse response = email.Send();
 
-            var response = await email.SendAsync();
-            Assert.IsTrue(response.Successful);
-        }
+		Assert.That(response.Successful, Is.True);
+	}
 
-        [Test, Ignore("Missing Graph credentials")]
-        public async Task CanSendEmailWithAttachments()
-        {
-            var stream = new MemoryStream();
-            var sw = new StreamWriter(stream);
-            sw.WriteLine("Hey this is some text in an attachment");
-            sw.Flush();
-            stream.Seek(0, SeekOrigin.Begin);
+	[Test, Ignore("Missing Graph credentials")]
+	public async Task CanSendEmailAsync() {
+		IFluentEmail email = Email
+			.From(SenderEmail)
+			.To(ToEmail)
+			.Subject("Test Async Email")
+			.Body("Test email from Graph sender unit test");
 
-            var attachment = new Attachment
-            {
-                ContentType = "text/plain",
-                Filename = "graphtest.txt",
-                Data = stream
-            };
+		SendResponse response = await email.SendAsync();
 
-            var email = Email
-                .From(senderEmail)
-                .To(toEmail)
-                .Subject("Test Email with Attachments")
-                .Body("Test email from Graph sender unit test")
-                .Attach(attachment);
+		Assert.That(response.Successful, Is.True);
+	}
 
-            var response = await email.SendAsync();
-            Assert.IsTrue(response.Successful);
-        }
+	[Test, Ignore("Missing Graph credentials")]
+	public async Task CanSendEmailWithAttachments() {
+		MemoryStream stream = new();
+		StreamWriter sw = new(stream);
+		await sw.WriteLineAsync("Hey this is some text in an attachment");
+		await sw.FlushAsync();
+		stream.Seek(0, SeekOrigin.Begin);
 
-        [Test, Ignore("Missing Graph credentials")]
-        public async Task CanSendHighPriorityEmail()
-        {
-            var email = Email
-                .From(senderEmail)
-                .To(toEmail)
-                .Subject("Test High Priority Email")
-                .Body("Test email from Graph sender unit test")
-                .HighPriority();
+		Attachment attachment = new() {
+			ContentType = "text/plain",
+			Filename = "graphtest.txt",
+			Data = stream
+		};
 
-            var response = await email.SendAsync();
-            Assert.IsTrue(response.Successful);
-        }
-    }
+		IFluentEmail email = Email
+			.From(SenderEmail)
+			.To(ToEmail)
+			.Subject("Test Email with Attachments")
+			.Body("Test email from Graph sender unit test")
+			.Attach(attachment);
+
+		SendResponse response = await email.SendAsync();
+
+		Assert.That(response.Successful, Is.True);
+	}
+
+	[Test, Ignore("Missing Graph credentials")]
+	public async Task CanSendHighPriorityEmail() {
+		IFluentEmail email = Email
+			.From(SenderEmail)
+			.To(ToEmail)
+			.Subject("Test High Priority Email")
+			.Body("Test email from Graph sender unit test")
+			.HighPriority();
+
+		SendResponse response = await email.SendAsync();
+
+		Assert.That(response.Successful, Is.True);
+	}
 }

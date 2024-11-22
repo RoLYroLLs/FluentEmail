@@ -1,168 +1,175 @@
 ﻿using FluentEmail.Core;
-using NUnit.Framework;
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using Attachment = FluentEmail.Core.Models.Attachment;
 
-namespace FluentEmail.SendGrid.Tests
-{
-    public class SendGridSenderTests
-    {
-        const string apiKey = "missing-credentials"; // TODO: Put your API key here
+namespace FluentEmail.SendGrid.Tests;
 
-        const string toEmail = "fluentEmail@mailinator.com";
-        const string toName = "FluentEmail Mailinator";
-        const string fromEmail = "test@fluentmail.com";
-        const string fromName = "SendGridSender Test";
+public class SendGridSenderTests {
+	public const string ApiKey = "missing-credentials"; // TODO: Put your API key here
 
-        [SetUp]
-        public void SetUp()
-        {
-            if (string.IsNullOrWhiteSpace(apiKey)) throw new ArgumentException("SendGrid Api Key needs to be supplied");
+	private const string ToEmail = "fluentEmail@mailinator.com";
+	public const string ToName = "FluentEmail Mailinator";
+	public const string FromEmail = "test@fluentmail.com";
+	public const string FromName = "SendGridSender Test";
 
-            var sender = new SendGridSender(apiKey, true);
-            Email.DefaultSender = sender;
-        }
+	[SetUp]
+	public void SetUp() {
+		if (string.IsNullOrWhiteSpace(ApiKey)) throw new ArgumentException("SendGrid Api Key needs to be supplied");
 
-        [Test, Ignore("No sendgrid credentials")]
-        public async Task CanSendEmail()
-        {
-            const string subject = "SendMail Test";
-            const string body = "This email is testing send mail functionality of SendGrid Sender.";
+		SendGridSender sender = new(ApiKey, true);
+		Email.DefaultSender = sender;
+	}
 
-            var email = Email
-                .From(fromEmail, fromName)
-                .To(toEmail, toName)
-                .Subject(subject)
-                .Body(body);
+	[Test, Ignore("No sendgrid credentials")]
+	public async Task CanSendEmail() {
+		const string subject = "SendMail Test";
+		const string body = "This email is testing send mail functionality of SendGrid Sender.";
 
-            var response = await email.SendAsync();
+		IFluentEmail email = Email
+			.From(FromEmail, FromName)
+			.To(ToEmail, ToName)
+			.Subject(subject)
+			.Body(body);
 
-            Assert.IsTrue(response.Successful);
-        }
+		Core.Models.SendResponse response = await email.SendAsync();
 
-        [Test, Ignore("No sendgrid credentials")]
-        public async Task CanSendTemplateEmail()
-        {
-            const string subject = "SendMail Test";
-            const string templateId = "123456-insert-your-own-id-here";
-            object templateData = new
-            {
-                Name = toName,
-                ArbitraryValue = "The quick brown fox jumps over the lazy dog."
-            };
+		Assert.That(response.Successful, Is.True);
+	}
 
-            var email = Email
-                .From(fromEmail, fromName)
-                .To(toEmail, toName)
-                .Subject(subject);
+	[Test, Ignore("No sendgrid credentials")]
+	public async Task CanSendTemplateEmail() {
+		const string subject = "SendMail Test";
+		const string templateId = "123456-insert-your-own-id-here";
+		object templateData = new {
+			Name = ToName,
+			ArbitraryValue = "The quick brown fox jumps over the lazy dog."
+		};
 
-            var response = await email.SendWithTemplateAsync(templateId, templateData);
+		IFluentEmail email = Email
+			.From(FromEmail, FromName)
+			.To(ToEmail, ToName)
+			.Subject(subject);
 
-            Assert.IsTrue(response.Successful);
-        }
+		Core.Models.SendResponse response = await email.SendWithTemplateAsync(templateId, templateData);
 
-        [Test, Ignore("No sendgrid credentials")]
-        public async Task CanSendEmailWithReplyTo()
-        {
-            const string subject = "SendMail Test";
-            const string body = "This email is testing send mail with ReplyTo functionality of SendGrid Sender.";
+		Assert.That(response.Successful, Is.True);
+	}
 
-            var email = Email
-                .From(fromEmail, fromName)
-                .To(toEmail, toName)
-                .ReplyTo(toEmail, toName)
-                .Subject(subject)
-                .Body(body);
+	[Test, Ignore("No sendgrid credentials")]
+	public async Task CanSendEmailWithReplyTo() {
+		const string subject = "SendMail Test";
+		const string body = "This email is testing send mail with ReplyTo functionality of SendGrid Sender.";
 
-            var response = await email.SendAsync();
+		IFluentEmail email = Email
+			.From(FromEmail, FromName)
+			.To(ToEmail, ToName)
+			.ReplyTo(ToEmail, ToName)
+			.Subject(subject)
+			.Body(body);
 
-            Assert.IsTrue(response.Successful);
-        }
+		Core.Models.SendResponse response = await email.SendAsync();
 
-        [Test, Ignore("No sendgrid credentials")]
-        public async Task CanSendEmailWithCategory()
-        {
-            const string subject = "SendMail Test";
-            const string body = "This email is testing send mail with Categories functionality of SendGrid Sender.";
+		Assert.That(response.Successful, Is.True);
+	}
 
-            var email = Email
-                .From(fromEmail, fromName)
-                .To(toEmail, toName)
-                .ReplyTo(toEmail, toName)
-                .Subject(subject)
-                .Tag("TestCategory")
-                .Body(body);
+	[Test, Ignore("No sendgrid credentials")]
+	public async Task CanSendEmailWithCategory() {
+		const string subject = "SendMail Test";
+		const string body = "This email is testing send mail with Categories functionality of SendGrid Sender.";
 
-            var response = await email.SendAsync();
+		IFluentEmail email = Email
+			.From(FromEmail, FromName)
+			.To(ToEmail, ToName)
+			.ReplyTo(ToEmail, ToName)
+			.Subject(subject)
+			.Tag("TestCategory")
+			.Body(body);
 
-            Assert.IsTrue(response.Successful);
-        }
+		Core.Models.SendResponse response = await email.SendAsync();
 
-        [Test, Ignore("No sendgrid credentials")]
-        public async Task CanSendEmailWithAttachments()
-        {
-            const string subject = "SendMail With Attachments Test";
-            const string body = "This email is testing the attachment functionality of SendGrid Sender.";
+		Assert.That(response.Successful, Is.True);
+	}
 
-            using (var stream = File.OpenRead($"{Directory.GetCurrentDirectory()}/test-binary.xlsx"))
-            {
-                var attachment = new Attachment
-                {
-                    Data = stream,
-                    ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    Filename = "test-binary.xlsx"
-                };
+	[Test, Ignore("No sendgrid credentials")]
+	public async Task CanSendEmailWithAttachments() {
+		const string subject = "SendMail With Attachments Test";
+		const string body = "This email is testing the attachment functionality of SendGrid Sender.";
 
-                var email = Email
-                    .From(fromEmail, fromName)
-                    .To(toEmail, toName)
-                    .Subject(subject)
-                    .Body(body)
-                    .Attach(attachment);
+		await using FileStream stream = File.OpenRead($"{Directory.GetCurrentDirectory()}/test-binary.xlsx");
+		Attachment attachment = new() {
+			Data = stream,
+			ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+			Filename = "test-binary.xlsx"
+		};
 
+		IFluentEmail email = Email
+			.From(FromEmail, FromName)
+			.To(ToEmail, ToName)
+			.Subject(subject)
+			.Body(body)
+			.Attach(attachment);
 
-                var response = await email.SendAsync();
+		Core.Models.SendResponse response = await email.SendAsync();
 
-                Assert.IsTrue(response.Successful);
-            }
-        }
+		Assert.That(response.Successful, Is.True);
+	}
 
-        [Test, Ignore("No sendgrid credentials")]
-        public async Task CanSendHighPriorityEmail()
-        {
-            const string subject = "SendMail Test";
-            const string body = "This email is testing send mail functionality of SendGrid Sender.";
+	[Test, Ignore("No sendgrid credentials")]
+	public async Task CanSendHighPriorityEmail() {
+		const string subject = "SendMail Test";
+		const string body = "This email is testing send mail functionality of SendGrid Sender.";
 
-            var email = Email
-                .From(fromEmail, fromName)
-                .To(toEmail, toName)
-                .Subject(subject)
-                .Body(body)
-                .HighPriority();
+		IFluentEmail email = Email
+			.From(FromEmail, FromName)
+			.To(ToEmail, ToName)
+			.Subject(subject)
+			.Body(body)
+			.HighPriority();
 
-            var response = await email.SendAsync();
+		Core.Models.SendResponse response = await email.SendAsync();
 
-            Assert.IsTrue(response.Successful);
-        }
+		Assert.That(response.Successful, Is.True);
+	}
 
-        [Test, Ignore("No sendgrid credentials")]
-        public async Task CanSendLowPriorityEmail()
-        {
-            const string subject = "SendMail Test";
-            const string body = "This email is testing send mail functionality of SendGrid Sender.";
+	[Test, Ignore("No sendgrid credentials")]
+	public async Task CanSendLowPriorityEmail() {
+		const string subject = "SendMail Test";
+		const string body = "This email is testing send mail functionality of SendGrid Sender.";
 
-            var email = Email
-                .From(fromEmail, fromName)
-                .To(toEmail, toName)
-                .Subject(subject)
-                .Body(body)
-                .LowPriority();
+		IFluentEmail email = Email
+			.From(FromEmail, FromName)
+			.To(ToEmail, ToName)
+			.Subject(subject)
+			.Body(body)
+			.LowPriority();
 
-            var response = await email.SendAsync();
+		Core.Models.SendResponse response = await email.SendAsync();
 
-            Assert.IsTrue(response.Successful);
-        }
-    }
+		Assert.That(response.Successful, Is.True);
+	}
+
+	[Test, Ignore("No sendgrid credentials")]
+	public async Task CanSendEmailWithInlineAttachments() {
+		const string subject = "SendMail With Inline Attachments Test";
+		const string body = "This email is testing the inline attachment functionality of SendGrid Sender.";
+
+		await using FileStream stream = File.OpenRead($"{Directory.GetCurrentDirectory()}/logotest.png");
+		Attachment attachment = new() {
+			Data = stream,
+			ContentType = "image/png",
+			Filename = "logotest.png",
+			IsInline = true,
+			ContentId = "logotest_id"
+		};
+
+		IFluentEmail email = Email
+			.From(FromEmail, FromName)
+			.To(ToEmail, ToName)
+			.Subject(subject)
+			.Body(body)
+			.Attach(attachment);
+
+		Core.Models.SendResponse response = await email.SendAsync();
+
+		Assert.That(response.Successful, Is.True);
+	}
 }

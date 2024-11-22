@@ -26,22 +26,19 @@
 using System;
 using System.ComponentModel;
 
-namespace FluentEmail.Core
-{
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public interface IHideObjectMembers
-    {
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        Type GetType();
+namespace FluentEmail.Core;
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        int GetHashCode();
+[EditorBrowsable(EditorBrowsableState.Never)]
+public interface IHideObjectMembers {
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	Type GetType();
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        string ToString();
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	int GetHashCode();
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        bool Equals(object obj);
-    }
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	string ToString();
 
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	bool Equals(object obj);
 }

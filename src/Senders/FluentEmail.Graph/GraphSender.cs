@@ -17,14 +17,16 @@ public class GraphSender : ISender {
 	private readonly bool _saveSent;
 	private readonly GraphServiceClient _graphClient;
 
+	public GraphSender(GraphOptions options) : this(options.TenantId, options.ClientId, options.ClientSecret, options.SaveSentItems) { }
+
 	public GraphSender(string clientId, string tenantId, string clientSecret, bool saveSentItems) {
 		_saveSent = saveSentItems;
 
-		TokenCredentialOptions options = new() {
+		TokenCredentialOptions tokenOptions = new() {
 			AuthorityHost = AzureAuthorityHosts.AzurePublicCloud,
 		};
 
-		ClientSecretCredential clientSecretCredential = new(tenantId, clientId, clientSecret, options);
+		ClientSecretCredential clientSecretCredential = new(tenantId, clientId, clientSecret, tokenOptions);
 		_graphClient = new GraphServiceClient(clientSecretCredential);
 	}
 

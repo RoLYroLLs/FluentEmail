@@ -17,6 +17,12 @@ public class SendGridSender : ISendGridSender {
 	private readonly string? _host = null;
 	private readonly bool _sandBoxMode;
 
+	public SendGridSender(SendGridOptions options) {
+		_apiKey = options.ApiKey;
+		_host = options.Host;
+		_sandBoxMode = options.SandBoxMode;
+	}
+
 	public SendGridSender(string apiKey, bool sandBoxMode = false) {
 		_apiKey = apiKey;
 		_sandBoxMode = sandBoxMode;

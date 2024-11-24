@@ -21,6 +21,12 @@ public class MailtrapSender : ISender, IDisposable {
 	/// <summary>
 	/// Creates a sender that uses the given Mailtrap credentials, but does not dispose it.
 	/// </summary>
+	/// <param name="options">Options of your mailtrap.io</param>
+	public MailtrapSender(MailtrapOptions options) : this(options.UserName, options.Password, options.Host, options.Port) { }
+
+	/// <summary>
+	/// Creates a sender that uses the given Mailtrap credentials, but does not dispose it.
+	/// </summary>
 	/// <param name="userName">Username of your mailtrap.io SMTP inbox</param>
 	/// <param name="password">Password of your mailtrap.io SMTP inbox</param>
 	/// <param name="host">Host address for the Mailtrap.io SMTP inbox</param>

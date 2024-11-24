@@ -8,6 +8,8 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace Microsoft.Extensions.DependencyInjection;
 
 public static class FluentEmailMailgunBuilderExtensions {
+	public static FluentEmailServicesBuilder AddMailGunSender(this FluentEmailServicesBuilder builder, MailGunOptions options) => builder.AddMailGunSender(options.DomainName, options.ApiKey, options.MailGunRegion);
+
 	public static FluentEmailServicesBuilder AddMailGunSender(this FluentEmailServicesBuilder builder, string domainName, string apiKey, MailGunRegion mailGunRegion = MailGunRegion.USA) {
 		builder.Services.AddHttpClient(nameof(MailgunSender), client => {
 			string url = mailGunRegion switch {

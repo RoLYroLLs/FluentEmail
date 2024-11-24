@@ -16,7 +16,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Senders", "Senders", "{E71D
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A3FFFE2C-638F-4BE2-B495-1BB35D5AF27F}"
 	ProjectSection(SolutionItems) = preProject
-		CHANGELOG.md = CHANGELOG.md
 		src\Directory.Build.props = src\Directory.Build.props
 		README.md = README.md
 	EndProjectSection
